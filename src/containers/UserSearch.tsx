@@ -1,19 +1,10 @@
 import Autocomplete from '@/components/Autocomplete';
-import { Response } from '@/utils/interface';
+import { useUsers } from '@/services/user';
+import { useRouter } from 'next/router';
 import React, { useEffect, useRef, useState } from 'react';
-import { useQuery } from 'react-query';
-
-async function getUsers(q = '') {
-    const response = await fetch(`https://fetest.mashx.click/api/users?query=${q}`);
-    return response.json();
-}
-
-function useUsers(q = '') {
-    return useQuery<Response>(['users', q], () => getUsers(q), {});
-}
 
 function UserSearch() {
-    const textRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
     const listRef = useRef<HTMLUListElement>(null);
 
     const [value, setValue] = useState('');
@@ -27,7 +18,6 @@ function UserSearch() {
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-
             // if the target element is not within the list, hide the list
             if (listRef.current && !listRef.current.contains(e.target as Node)) {
                 setValue('');
@@ -41,15 +31,24 @@ function UserSearch() {
         };
     }, []);
 
+    const handleSelect = (name: string) => {
+        router.push(`/users/${name}`)
+    };
+
     return (
-        <div className='relative'>
-            <Autocomplete placeholder='e.g. "John"' onChange={handleChange} onFocus={handleChange} ref={textRef}/>
+        <div className="relative">
+            <Autocomplete placeholder='e.g. "John"' value={value} onChange={handleChange} onFocus={handleChange} />
             <ul ref={listRef} className="bg-white rounded-md max-h-56 overflow-auto absolute w-96 top-14 shadow-md">
-                {value && data?.data?.map((user) => (
-                    <li className="py-2 px-4 border-b hover:bg-green-300 hover:cursor-pointer" key={user.id}>
-                        {user.name}
-                    </li>
-                ))}
+                {value &&
+                    data?.data?.map((user) => (
+                        <li
+                            className="py-2 px-4 border-b hover:bg-green-300 hover:cursor-pointer"
+                            key={user.id}
+                            onClick={() => handleSelect(user.name)}
+                        >
+                            {user.name}
+                        </li>
+                    ))}
             </ul>
         </div>
     );
